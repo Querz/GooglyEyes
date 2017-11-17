@@ -2,3 +2,5 @@
 !gradle-wrapper.jar
 .idea/
 build/
+*.iml
+out/
