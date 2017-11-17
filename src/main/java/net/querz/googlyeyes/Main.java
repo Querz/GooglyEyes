@@ -32,7 +32,6 @@ public class Main {
 		System.setProperty("apple.awt.UIElement", "true");
 
 		BufferedImage img = new BufferedImage(IMAGE_SIZE, IMAGE_SIZE, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g2d = img.createGraphics();
 
 		TrayIcon i = new TrayIcon(img);
 		PopupMenu p = new PopupMenu();
@@ -40,15 +39,17 @@ public class Main {
 		m.addActionListener(e -> System.exit(0));
 		p.add(m);
 		i.setPopupMenu(p);
-
 		SystemTray.getSystemTray().add(i);
 
+		Graphics2D g2d;
 		for (;;) {
 			try {
+				g2d = img.createGraphics();
 				drawEyes(g2d);
 				i.setImage(img);
+				g2d.dispose();
 			} catch (Exception ex) {
-				ex.printStackTrace();
+				//do nothing
 			}
 			Thread.sleep(50);
 		}
