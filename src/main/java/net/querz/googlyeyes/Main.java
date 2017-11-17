@@ -11,6 +11,7 @@ public class Main {
 	private static final int RIGHT_EYE_X = WIDTH - 50;
 	private static final int EYE_Y = 15;
 
+	private static final long DEFAULT_INTERVAL = 100;
 	private static final int IMAGE_BASE_SIZE = 64;
 	private static final int PUPIL_BASE_SIZE = 16;
 	private static final double SCALING = 0.5;
@@ -28,6 +29,8 @@ public class Main {
 	private static final int EYE_CENTER_Y = (IMAGE_SIZE - Y_GAP) / 2 - 2;
 	private static final float STROKE = (float) (3.0 * SCALING);
 
+	private static long interval = DEFAULT_INTERVAL;
+
 	public static void main(String[] args) throws InterruptedException, AWTException {
 		System.setProperty("apple.awt.UIElement", "true");
 
@@ -42,9 +45,21 @@ public class Main {
 		SystemTray.getSystemTray().add(icon);
 		dummy.flush();
 
+		if (args.length > 0) {
+			try {
+				interval = Long.parseLong(args[0]);
+				if (interval < 50) {
+					throw new NumberFormatException();
+				}
+			} catch (NumberFormatException ex) {
+				interval = DEFAULT_INTERVAL;
+				System.out.println("Invalid interval \"" + args[0] + "\", setting to " + DEFAULT_INTERVAL);
+			}
+		}
+
 		for (;;) {
 			drawEyes(icon);
-			Thread.sleep(100);
+			Thread.sleep(interval);
 		}
 	}
 
