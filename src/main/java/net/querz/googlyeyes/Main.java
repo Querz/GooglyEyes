@@ -2,6 +2,8 @@ package net.querz.googlyeyes;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 public class Main {
 
@@ -12,6 +14,7 @@ public class Main {
 	private static final int EYE_Y = 15;
 
 	private static final long DEFAULT_INTERVAL = 100;
+	private static final long CHECK_MODE_INTERVAL = 5000;
 	private static final int IMAGE_BASE_SIZE = 64;
 	private static final int PUPIL_BASE_SIZE = 16;
 	private static final double SCALING = 0.5;
@@ -30,6 +33,7 @@ public class Main {
 	private static final float STROKE = (float) (3.0 * SCALING);
 
 	private static long interval = DEFAULT_INTERVAL;
+	private static boolean darkMode = false;
 
 	public static void main(String[] args) throws InterruptedException, AWTException {
 		System.setProperty("apple.awt.UIElement", "true");
@@ -57,9 +61,16 @@ public class Main {
 			}
 		}
 
+		long lastModeCheck = CHECK_MODE_INTERVAL;
+
 		for (;;) {
+			if (lastModeCheck >= CHECK_MODE_INTERVAL) {
+				darkMode = isMacMenuBarDarkMode();
+				lastModeCheck = 0;
+			}
 			drawEyes(icon);
 			Thread.sleep(interval);
+			lastModeCheck += interval;
 		}
 	}
 
@@ -73,10 +84,7 @@ public class Main {
 
 			g2d.setStroke(new BasicStroke(STROKE));
 			g2d.setRenderingHints(new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON));
-			g2d.setComposite(AlphaComposite.Clear);
-			g2d.fillRect(0, 0, IMAGE_SIZE, IMAGE_SIZE);
-			g2d.setComposite(AlphaComposite.SrcOver);
-			g2d.setColor(Color.WHITE);
+			g2d.setColor(darkMode ? Color.WHITE : Color.BLACK);
 			g2d.drawOval(GAP, (IMAGE_SIZE - EYE_HEIGHT) / 2, EYE_WIDTH, EYE_HEIGHT);
 			g2d.drawOval(IMAGE_SIZE - GAP - EYE_WIDTH, (IMAGE_SIZE - EYE_HEIGHT) / 2, EYE_WIDTH, EYE_HEIGHT);
 
@@ -104,6 +112,17 @@ public class Main {
 			if (img != null) {
 				img.flush();
 			}
+		}
+	}
+
+	private static boolean isMacMenuBarDarkMode() {
+		try {
+			Process process = Runtime.getRuntime().exec(new String[] {"defaults", "read", "-g", "AppleInterfaceStyle"});
+			process.waitFor(100, TimeUnit.MILLISECONDS);
+			return process.exitValue() == 0;
+		} catch (IOException | InterruptedException | IllegalThreadStateException ex) {
+			System.out.println("Could not determine, whether 'dark mode' is being used. Falling back to default (light) mode.");
+			return false;
 		}
 	}
 }
